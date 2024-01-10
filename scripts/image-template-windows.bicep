@@ -29,7 +29,16 @@ resource azureImageBuilderTemplate 'Microsoft.VirtualMachineImages/imageTemplate
   }
   properties: {
     buildTimeoutInMinutes: 120
-    customize: []
+    customize: [
+      {
+        type: 'PowerShell'
+        name: 'Customize Placeholder'
+        runElevated: true
+        inline: [
+          'Write-Host "Customize Placeholder"'
+        ]
+      }
+    ]
     // customize: [
     //   {
     //     type: 'PowerShell'
