@@ -30,23 +30,23 @@ resource azureImageBuilderTemplate 'Microsoft.VirtualMachineImages/imageTemplate
   properties: {
     buildTimeoutInMinutes: 120
     customize: [
-      {
-        type: 'PowerShell'
-        name: 'InstallWindosPerformanceToolkit'
-        runElevated: true
-        inline: [
-          'Invoke-WebRequest -Uri https://go.microsoft.com/fwlink/?linkid=2165884 -OutFile \'C:\\Program Files\\adksetup.exe\''
-          'cd \'C:\\Program Files\'; .\\adksetup.exe /quiet /installpath "C:\\Program Files\\ADK" /features OptionId.WindowsPerformanceToolkit'
-          'do {'
-          '    if (-not (Test-Path \'C:\\Program Files (x86)\\ADK\')) {'
-          '        Write-Host "Not here yet..."'
-          '        Start-Sleep -s 5'
-          '        Set-Location "C:\\Program Files\\"'
-          '        .\\adksetup.exe /quiet /installpath "C:\\Program Files\\ADK" /features OptionId.WindowsPerformanceToolkit'
-          '    }'
-          '} until (Test-Path \'C:\\Program Files (x86)\\ADK\');'
-        ]
-      }
+      // {
+      //   type: 'PowerShell'
+      //   name: 'InstallWindosPerformanceToolkit'
+      //   runElevated: true
+      //   inline: [
+      //     'Invoke-WebRequest -Uri https://go.microsoft.com/fwlink/?linkid=2165884 -OutFile \'C:\\Program Files\\adksetup.exe\''
+      //     'cd \'C:\\Program Files\'; .\\adksetup.exe /quiet /installpath "C:\\Program Files\\ADK" /features OptionId.WindowsPerformanceToolkit'
+      //     'do {'
+      //     '    if (-not (Test-Path \'C:\\Program Files (x86)\\ADK\')) {'
+      //     '        Write-Host "Not here yet..."'
+      //     '        Start-Sleep -s 5'
+      //     '        Set-Location "C:\\Program Files\\"'
+      //     '        .\\adksetup.exe /quiet /installpath "C:\\Program Files\\ADK" /features OptionId.WindowsPerformanceToolkit'
+      //     '    }'
+      //     '} until (Test-Path \'C:\\Program Files (x86)\\ADK\');'
+      //   ]
+      // }
       {
         type: 'PowerShell'
         name: 'ConfigureHostmemUsageCollector'
