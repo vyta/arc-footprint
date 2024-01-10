@@ -523,7 +523,6 @@ resource azureImageBuilderTemplate 'Microsoft.VirtualMachineImages/imageTemplate
       }
       {
         type: 'PowerShell'
-        runElevated: true
         inline: [
           'Write-Host "Step 4: Save kubeconfig to c:\\scripts"'
           'Get-AksEdgeKubeConfig -KubeConfigPath C:\\Scripts -Confirm:$false'
