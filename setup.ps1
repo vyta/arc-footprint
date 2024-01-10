@@ -41,4 +41,4 @@ gh secret set AZURE_SP_CLIENT_SECRET -b $azureCredentials.clientSecret -R $Forke
 gh secret set AZURE_SP_OBJECT_ID -b $spObjectId -R $ForkedRepo
 gh secret set CUSTOM_LOCATIONS_OBJECT_ID -b $customLocationsObjectId -R $ForkedRepo
 gh secret set VMADMINUSERNAME -b $VmAdminUsername -R $ForkedRepo
-gh secret set VMADMINPASSWORD -b $VmAdminPassword -R $ForkedRepo
+gh secret set VMADMINPASSWORD -b ($VmAdminPassword | ConvertFrom-SecureString -AsPlainText) -R $ForkedRepo
