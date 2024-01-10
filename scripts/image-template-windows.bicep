@@ -52,6 +52,7 @@ resource azureImageBuilderTemplate 'Microsoft.VirtualMachineImages/imageTemplate
         name: 'ConfigureHostmemUsageCollector'
         runElevated: true
         inline: [
+          '$ProgressPreference = \'SilentlyContinue\'; Set-ExecutionPolicy Bypass -Scope LocalMachine -Force'
           'New-Item -Path "C:\\" -Name "HostmemLogs" -ItemType Directory'
           'New-Item -Path "C:\\HostmemLogs\\" -Name "traces" -ItemType Directory'
           // '$wpaProfile=@"'
@@ -405,6 +406,7 @@ resource azureImageBuilderTemplate 'Microsoft.VirtualMachineImages/imageTemplate
         name: 'RegisterHostMemCollectorScript'
         runElevated: true
         inline: [
+          '$ProgressPreference = \'SilentlyContinue\'; Set-ExecutionPolicy Bypass -Scope LocalMachine -Force'
           'Register-ScheduledJob -Name "Collect-HostmemUsage" -RunEvery (New-TimeSpan -Minutes 4) -ScriptBlock {'
              'wpr -start ResidentSet'
              'Start-sleep -Seconds 60'
@@ -418,7 +420,7 @@ resource azureImageBuilderTemplate 'Microsoft.VirtualMachineImages/imageTemplate
         name: 'InstallAzureCLI'
         runElevated: true
         inline: [
-          '$ProgressPreference = \'SilentlyContinue\'; Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile .\\AzureCLI.msi; Start-Process msiexec.exe -Wait -ArgumentList \'/I AzureCLI.msi /quiet\'; Remove-Item .\\AzureCLI.msi'
+          '$ProgressPreference = \'SilentlyContinue\'; Set-ExecutionPolicy Bypass -Scope LocalMachine -Force; Invoke-WebRequest -Uri https://aka.ms/installazurecliwindows -OutFile .\\AzureCLI.msi; Start-Process msiexec.exe -Wait -ArgumentList \'/I AzureCLI.msi /quiet\'; Remove-Item .\\AzureCLI.msi'
         ]
       }
       // {
