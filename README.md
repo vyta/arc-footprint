@@ -19,9 +19,14 @@ This infrastructure enables you to install instrumentation tools and collect mem
 
 ### Setup
 
-Execute the PowerShell script
+Execute the PowerShell script [`./setup.ps1`](./setup.ps1):
 
-[`./setup.ps1`](./setup.ps1)
+```powershell
+./setup.ps1 -ForkedRepo <owner/forked-repo-name> -SubscriptionId <subid> -ServicePrincipalName <name-for-new-sp> -VmAdminUsername <vm-usrname>
+
+# or 
+./setup.ps1 <owner/forked-repo-name> <subid> <name-for-new-sp> <vm-usrname>
+```
 
 to create the required Service Principal, Role Assignments and GitHub Secrets.
 
