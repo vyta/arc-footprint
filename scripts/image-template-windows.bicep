@@ -29,6 +29,7 @@ resource azureImageBuilderTemplate 'Microsoft.VirtualMachineImages/imageTemplate
   }
   properties: {
     buildTimeoutInMinutes: 120
+    customize: []
     // customize: [
     //   {
     //     type: 'PowerShell'
