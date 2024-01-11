@@ -410,6 +410,7 @@ resource azureImageBuilderTemplate 'Microsoft.VirtualMachineImages/imageTemplate
              'wpr -stop C:\\HostmemLogs\\traces\\residentset.etl'
              'wpaexporter C:\\HostmemLogs\\traces\\residentset.etl -profile C:\\HostmemLogs\\traces\\hostmemusage.wpaProfile -outputFolder C:\\HostmemLogs -delimiter "|"'
           '}'
+          'Get-ScheduledJob -Name "Collect-HostmemUsage" | Add-JobTrigger -Trigger (New-JobTrigger -AtStartup)'
         ]
       }
       {
