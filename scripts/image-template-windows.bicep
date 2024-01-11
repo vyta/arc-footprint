@@ -404,13 +404,15 @@ resource azureImageBuilderTemplate 'Microsoft.VirtualMachineImages/imageTemplate
         name: 'RegisterHostMemCollectorScript'
         inline: [
           '$ProgressPreference = \'SilentlyContinue\'; Set-ExecutionPolicy Bypass -Scope LocalMachine -Force'
-          'Register-ScheduledJob -Name "Collect-HostmemUsage" -RunEvery (New-TimeSpan -Minutes 4) -ScriptBlock {'
-             'wpr -start ResidentSet'
-             'Start-sleep -Seconds 60'
-             'wpr -stop C:\\HostmemLogs\\traces\\residentset.etl'
-             'wpaexporter C:\\HostmemLogs\\traces\\residentset.etl -profile C:\\HostmemLogs\\traces\\hostmemusage.wpaProfile -outputFolder C:\\HostmemLogs -delimiter "|"'
-          '}'
-          'Get-ScheduledJob -Name "Collect-HostmemUsage" | Add-JobTrigger -Trigger (New-JobTrigger -AtStartup)'
+          '$scriptPath="C:\\HostmemLogs\\collect.ps1"'
+          '$scriptBlock=@"'
+          'wpr -start ResidentSet'
+          'Start-sleep -Seconds 60'
+          'wpr -stop C:\\HostmemLogs\\traces\\residentset.etl'
+          'wpaexporter C:\\HostmemLogs\\traces\\residentset.etl -profile C:\\HostmemLogs\\traces\\hostmemusage.wpaProfile -outputFolder C:\\HostmemLogs -delimiter "|"'
+          '"@'
+          'Set-content -Path $scriptPath -Value $scriptBlock -Force'
+          'Register-ScheduledJob -Name "Collect-HostmemUsage" -RunEvery (New-TimeSpan -Minutes 4) -FilePath $scriptPath'
         ]
       }
       {
