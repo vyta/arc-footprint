@@ -47,7 +47,7 @@ vmResource=$(az vm show --name $vmName --resource-group $resourceGroup | jq -c .
 osType=$(echo $vmResource | jq -r .storageProfile.osDisk.osType)
 ruleName="$osType-hostmemcollector"
 
-echo "Ensure ADK is installed and job is started..."
+#echo "Ensure ADK is installed and job is started..."
 #az vm run-command create -g $resourceGroup --vm-name $vmName --script "Invoke-WebRequest -Uri https://go.microsoft.com/fwlink/?linkid=2243390 -OutFile 'C:\\Program Files\\adksetup.exe'" --run-command-name "DownloadADK" 
 #az vm run-command create -g $resourceGroup --vm-name $vmName --script "cd 'C:\\Program Files'; .\\adksetup.exe /quiet /installpath 'C:\\Program Files\\ADK' /features OptionId.WindowsPerformanceToolkit" --run-command-name "InstallADK"
 #az vm run-command create -g $resourceGroup --vm-name $vmName --script "wpaexporter C:\\HostmemLogs\\traces\\residentset.etl -profile C:\\HostmemLogs\\traces\\hostmemusage.wpaProfile -outputFolder C:\\HostmemLogs -delimiter \"|\"" --run-command-name "InitRun"
