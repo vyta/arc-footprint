@@ -67,10 +67,12 @@ else
   echo "Azure Monitor workspace found. Use existing..."
 fi
 
-if [ $osType == "Windows" ]; then
-  if [[ -z $(az vm extension show --name AzureMonitorWindowsAgent --vm-name $vmName -g $resourceGroup 2>/dev/null | jq .name) ]]; then
-    echo "Installing AzureMonitor agent extension on $vmName..."
+if [[ -z $(az vm extension show --name AzureMonitorWindowsAgent --vm-name $vmName -g $resourceGroup 2>/dev/null | jq .name) ]]; then
+  echo "Installing AzureMonitor agent extension on $vmName..."
+  if [ $osType == "Windows" ]; then
     az vm extension set --name AzureMonitorWindowsAgent --publisher Microsoft.Azure.Monitor --vm-name $vmName -g $resourceGroup
+  else
+    az vm extension set --name AzureMonitorLinuxAgent --publisher Microsoft.Azure.Monitor --vm-name $vmName -g $resourceGroup
   fi
 fi
 

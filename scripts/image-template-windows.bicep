@@ -414,7 +414,8 @@ resource azureImageBuilderTemplate 'Microsoft.VirtualMachineImages/imageTemplate
           'Set-content -Path $scriptPath -Value $scriptBlock -Force'
           '$action = New-ScheduledTaskAction -Execute "Register-ScheduledJob -Name "Collect-HostmemUsage" -RunEvery (New-TimeSpan -Minutes 4) -FilePath $scriptPath"'
           '$trigger = New-ScheduledTaskTrigger -AtStartup'
-          'Register-ScheduledTask RegisterCollector -Action $action -Trigger $trigger'
+          '$principal = New-ScheduledTaskPrincipal -UserID "NT AUTHORITY\\SYSTEM" -LogonType ServiceAccount -RunLevel Highest'
+          'Register-ScheduledTask -TaskName "RegisterCollector" -Action $action -Trigger $trigger -Principal $principal'
         ]
       }
       {
