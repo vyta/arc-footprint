@@ -64,7 +64,7 @@ resource azureImageBuilderTemplate 'Microsoft.VirtualMachineImages/imageTemplate
       {
         type: 'File'
         name: 'cgroup_mem.sh'
-        sourceUri: 'https://raw.githubusercontent.com/vyta/arc-footprint/hostmem/scripts/images/cgroup_mem.sh'
+        sourceUri: 'https://raw.githubusercontent.com/bindsi/arc-footprint/main/scripts/images/cgroup_mem.sh'
         destination: '/tmp/cgroup_mem.sh'
       }
       {
