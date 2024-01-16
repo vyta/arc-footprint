@@ -6,10 +6,11 @@ Usage(){
   echo "Description:"
   echo "  Creates Azure Monitor and Grafana resources to house metrics and dashboards"
   echo "Options:"
+  echo "  -v| Azure VM name (required)"
   echo "  -g| Azure resource group (required)"
   echo "  -m| Azure monitor resource name (default: footprint)"
   echo "  -d| Grafana dashboard resource name. Must be globally unique (default: footprint-<random4char>)"
-  echo "  -c| Azure monitor resource name. Skips extension install for connected cluster if not provided."
+  echo "  -c| Azure Arc resource name. Skips extension install for connected cluster if not provided."
 }
 
 while getopts ":v:g:m:d:c:" opt; do
@@ -67,14 +68,12 @@ else
   echo "Azure Monitor workspace found. Use existing..."
 fi
 
-if [[ -z $(az vm extension show --name AzureMonitorWindowsAgent --vm-name $vmName -g $resourceGroup 2>/dev/null | jq .name) ]]; then
+agent=AzureMonitor${osType}Agent
+if [[ -z $(az vm extension show --name $agent --vm-name $vmName -g $resourceGroup 2>/dev/null | jq .name) ]]; then
   echo "Installing AzureMonitor agent extension on $vmName..."
-  if [ $osType == "Windows" ]; then
-    az vm extension set --name AzureMonitorWindowsAgent --publisher Microsoft.Azure.Monitor --vm-name $vmName -g $resourceGroup
-  else
-    az vm extension set --name AzureMonitorLinuxAgent --publisher Microsoft.Azure.Monitor --vm-name $vmName -g $resourceGroup
-  fi
+  az vm extension set --name $agent --publisher Microsoft.Azure.Monitor --vm-name $vmName -g $resourceGroup
 fi
+echo $agent installed.
 
 grafana=$(az grafana list --query "[?resourceGroup=='$resourceGroup']" -o json | jq -c '.[0]')
 if [ -z $(az grafana list --query "[?resourceGroup=='$resourceGroup'].name" -o tsv) ]; then
@@ -84,6 +83,7 @@ else
   grafanaDashboardName=$(echo $grafana | jq -r .name)
   echo "Grafana resource ($grafanaDashboardName) found. Use existing..."
 fi
+
 grafanaIdentity=$(echo $grafana | jq -r '.identity.principalId')
 echo "Grafana identity: $grafanaIdentity"
 az role assignment create --assignee $grafanaIdentity --role "Monitoring Data Reader" --scope /subscriptions/$subscriptionId
@@ -108,12 +108,27 @@ if [[ -z $(az grafana folder show -n $grafanaDashboardName --folder "Footprint D
   az grafana folder create -n $grafanaDashboardName -g $resourceGroup --title "Footprint Dashboards"
 fi
 
-if [[ -z $(az grafana dashboard list -n $grafanaDashboardName  --query "[?title=='Memory Footprint / Namespace (Workloads)']" -o json | jq '.[].id') ]]; then
+if [[ -z $(az grafana dashboard list -n $grafanaDashboardName  --query "[?title=='Memory Footprint']" -o json | jq '.[].id') ]]; then
   echo "Creating grafana dashboard..."
+  sed -i "s/##SUBSCRIPTION_ID##/$subscriptionId/g" monitoring/mem_by_ns.json
+  sed -i "s/##RESOURCE_GROUP##/$resourceGroup/g" monitoring/mem_by_ns.json
+  if [ $osType == "Linux" ]; then
+    ts_query='CgroupMem_CL\\r\\n| where $__timeFilter(TimeGenerated)\\r\\n| summarize Memory=sum(MemoryUsage) by PodName, Namespace, TimeGenerated\\r\\n| project Memory, Workload=strcat(Namespace, \\"/\\", PodName), TimeGenerated\\r\\n| order by TimeGenerated asc\\r\\n'
+    t_query='CgroupMem_CL\\r\\n| where $__timeFilter(TimeGenerated)\\r\\n| summarize Memory=avg(MemoryUsage) by PodName, Namespace\\r\\n| project Workload=strcat(Namespace, \\"/\\", PodName), Memory\\r\\n| order by Memory desc \\r\\n'
+    sed -i "s?##TIME_SERIES_QUERY##?$ts_query?g" monitoring/mem_by_ns.json
+    sed -i "s?##TABLE_QUERY##?$t_query?g" monitoring/mem_by_ns.json
+    sed -i "s/##MEM_UNIT##/decbytes/g" monitoring/mem_by_ns.json
+  else
+    ts_query='ResidentSetSummary_CL\\r\\n| where $__timeFilter(TimeGenerated)\\r\\n| summarize Memory=sum(SizeMB)*1024 by TraceProcessName, TimeGenerated\\r\\n| order by TimeGenerated asc'
+    t_query='ResidentSetSummary_CL\\r\\n| where $__timeFilter(TimeGenerated)\\r\\n| summarize Memory=avg(SizeMB)*1024 by TraceProcessName\\r\\n| order by Memory desc'
+    sed -i "s/##TIME_SERIES_QUERY##/$ts_query/g" monitoring/mem_by_ns.json
+    sed -i "s/##TABLE_QUERY##/$t_query/g" monitoring/mem_by_ns.json
+    sed -i "s/##MEM_UNIT##/deckbytes/g" monitoring/mem_by_ns.json
+  fi
   az grafana dashboard create \
     -n $grafanaDashboardName \
     -g $resourceGroup \
-    --title "Memory Footprint / Namespace (Workloads)" \
+    --title "Memory Footprint" \
     --folder "Footprint Dashboards" \
     --definition $BASEDIR/../monitoring/mem_by_ns.json
 fi
