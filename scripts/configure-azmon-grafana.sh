@@ -128,7 +128,7 @@ if [[ -z $(az grafana dashboard list -n $grafanaName  --query "[?title=='$dashbo
   az grafana dashboard create \
     -n $grafanaName \
     -g $resourceGroup \
-    --title $dashboardName \
+    --title "$dashboardName" \
     --folder "Footprint Dashboards" \
     --definition $BASEDIR/../monitoring/mem_by_ns.json
 fi
