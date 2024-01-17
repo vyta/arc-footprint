@@ -151,4 +151,4 @@ az role assignment create --assignee $id --role "Grafana Admin"
 
 The following is a screengrab of the dashboard available at `Dashboards > Footprint Dashboards > Memory Footprint`:
 
-<img src='img/dashboard.png' width='75%' height='75%'>
+<img src='img/dashboard.png'>
