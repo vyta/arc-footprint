@@ -21,7 +21,7 @@ while getopts ":v:g:m:d:c:" opt; do
     ;;
     m) monitorName=$OPTARG
     ;;
-    d) grafanaDashboardName=$OPTARG
+    d) grafanaName=$OPTARG
     ;;
     c) clusterName=$OPTARG
     ;;
@@ -43,7 +43,7 @@ if [[ $OPTIND -eq 1 || -z $vmName ]]; then
 fi
 
 randoStr=$(tr -dc a-z0-9 </dev/urandom | head -c 4; echo)
-grafanaDashboardName=${grafanaDashboardName:-footprint-$randoStr}
+grafanaName=${grafanaName:-footprint-$randoStr}
 monitorName="${monitorName:-footprint}"
 
 BASEDIR=$(dirname $0)
@@ -53,7 +53,7 @@ if [ -z $resourceGroup ]; then
   exit 1
 else 
   az group show --name $resourceGroup
-  echo "Executing script with monitor name: $monitorName and grafana dashboard name: $grafanaDashboardName"
+  echo "Executing script with monitor name: $monitorName and grafana dashboard name: $grafanaName"
 fi
 
 location=$(az group show -n $resourceGroup --query location -o tsv)
@@ -78,20 +78,20 @@ echo $agent installed.
 grafana=$(az grafana list --query "[?resourceGroup=='$resourceGroup']" -o json | jq -c '.[0]')
 if [ -z $(az grafana list --query "[?resourceGroup=='$resourceGroup'].name" -o tsv) ]; then
   echo "Creating Grafana resource in azure..."
-  grafana=$(az grafana create -n $grafanaDashboardName -g $resourceGroup | jq -c .)
+  grafana=$(az grafana create -n $grafanaName -g $resourceGroup | jq -c .)
 else
-  grafanaDashboardName=$(echo $grafana | jq -r .name)
-  echo "Grafana resource ($grafanaDashboardName) found. Use existing..."
+  grafanaName=$(echo $grafana | jq -r .name)
+  echo "Grafana resource ($grafanaName) found. Use existing..."
 fi
 
 grafanaIdentity=$(echo $grafana | jq -r '.identity.principalId')
 echo "Grafana identity: $grafanaIdentity"
 az role assignment create --assignee $grafanaIdentity --role "Monitoring Data Reader" --scope /subscriptions/$subscriptionId
 
-if [[ -z $(az grafana data-source show -n $grafanaDashboardName --data-source "Azure Managed Prometheus-1" 2>/dev/null | jq .name) ]]; then
+if [[ -z $(az grafana data-source show -n $grafanaName --data-source "Azure Managed Prometheus-1" 2>/dev/null | jq .name) ]]; then
   echo "Adding prometheus data source to Grafana..."
   promUrl=$(echo $monitor_resource | jq -r .properties.metrics.prometheusQueryEndpoint)
-  az grafana data-source create -n $grafanaDashboardName -g $resourceGroup --definition '{
+  az grafana data-source create -n $grafanaName -g $resourceGroup --definition '{
       "name": "Azure Managed Prometheus-1",
       "type": "prometheus",
       "access": "proxy",
@@ -103,12 +103,12 @@ if [[ -z $(az grafana data-source show -n $grafanaDashboardName --data-source "A
     }'
 fi
 
-if [[ -z $(az grafana folder show -n $grafanaDashboardName --folder "Footprint Dashboards" 2>/dev/null | jq .id) ]]; then
+if [[ -z $(az grafana folder show -n $grafanaName --folder "Footprint Dashboards" 2>/dev/null | jq .id) ]]; then
   echo "Creating grafana folder for the first time..."
-  az grafana folder create -n $grafanaDashboardName -g $resourceGroup --title "Footprint Dashboards"
+  az grafana folder create -n $grafanaName -g $resourceGroup --title "Footprint Dashboards"
 fi
-
-if [[ -z $(az grafana dashboard list -n $grafanaDashboardName  --query "[?title=='Memory Footprint']" -o json | jq '.[].id') ]]; then
+dashboardName="Memory Footprint"
+if [[ -z $(az grafana dashboard list -n $grafanaName  --query "[?title=='$dashboardName']" -o json | jq '.[].id') ]]; then
   echo "Creating grafana dashboard..."
   sed -i "s/##SUBSCRIPTION_ID##/$subscriptionId/g" monitoring/mem_by_ns.json
   sed -i "s/##RESOURCE_GROUP##/$resourceGroup/g" monitoring/mem_by_ns.json
@@ -126,9 +126,9 @@ if [[ -z $(az grafana dashboard list -n $grafanaDashboardName  --query "[?title=
     sed -i "s/##MEM_UNIT##/deckbytes/g" monitoring/mem_by_ns.json
   fi
   az grafana dashboard create \
-    -n $grafanaDashboardName \
+    -n $grafanaName \
     -g $resourceGroup \
-    --title "Memory Footprint" \
+    --title $dashboardName \
     --folder "Footprint Dashboards" \
     --definition $BASEDIR/../monitoring/mem_by_ns.json
 fi
