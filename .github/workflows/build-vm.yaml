@@ -211,7 +211,7 @@ jobs:
             --publisher Microsoft.Azure.Extensions \
             --force-update \
             --settings "{\"commandToExecute\": \" \
-                curl -sfL https://get.k3s.io | sh - && \
+                sudo systemctl restart k3s
                 export KUBECONFIG=/etc/rancher/k3s/k3s.yaml && \
                 kubectl config use-context default && \
                 kubectl get pods -A -v6 && \
